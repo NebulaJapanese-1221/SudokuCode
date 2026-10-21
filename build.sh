@@ -36,7 +36,6 @@ if [[ "$BUILD_TESTS" == "ON" ]]; then
 fi
 
 echo "Build complete."
-echo "  CLI:     $BUILD_DIR/sudokucode"
 if [[ "$BUILD_GUI" == "ON" ]]; then
     echo "  GUI:     $BUILD_DIR/sudokucode_gui"
 fi

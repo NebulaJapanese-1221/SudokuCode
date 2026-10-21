@@ -33,7 +33,6 @@ SC1
 - **CRC32** integrity check on every payload.
 - **Optional XOR encryption** (`--encrypt --key`).
 - **BMP image export/import** (no external dependencies) for visual scanning.
-- **CLI**: single binary `sudokucode` with `encode`/`decode` modes.
 - **ASCII preview** (`--ascii`) for debugging.
 - **Linux only** (POSIX, no Windows GUI).
 
@@ -55,35 +54,9 @@ Install:
 cmake --install build
 ```
 
-## Usage
-
-Encode:
-
-```sh
-sudokucode encode --input msg.txt --output code.sudokucode --ecc 2
-sudokucode encode --input msg.txt --output code.sudokucode --encrypt --key secret --image code.bmp --ascii
-```
-
-Decode:
-
-```sh
-sudokucode decode --input code.sudokucode --output recovered.bin
-sudokucode decode --input code.sudokucode --encrypt --key secret
-sudokucode decode --input code.bmp --image --output recovered.bin
-```
-
 ## Constraints
 
 - Max payload per grid: `n*n` bytes (16 / 81 / 256 for 4/9/16).
 - Data must not create a duplicate in any row/column/box (encoder reports an error).
 - Avoid raw `00` bytes unless the mask distinguishes them (it does).
 - With ECC level `L`, up to `L/2` cell errors can be corrected.
-
-## Example
-
-```sh
-printf 'Hello' > msg.txt
-sudokucode encode --input msg.txt --output code.sudokucode --ecc 2 --ascii
-sudokucode decode --input code.sudokucode --output out.txt
-diff msg.txt out.txt && echo OK
-```

@@ -22,11 +22,6 @@ endif()
 set(SUDOKU_SRCS src/sudokucode.cpp)
 set(SUDOKU_HDRS src/sudokucode.h)
 
-# ---------- CLI (always built) ----------
-add_executable(sudokucode cli/main.cpp ${SUDOKU_SRCS})
-target_include_directories(sudokucode PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-                                              ${CMAKE_CURRENT_SOURCE_DIR}/src)
-
 # ---------- Tests ----------
 option(BUILD_TESTS "Build test suite" OFF)
 if (BUILD_TESTS)
@@ -76,7 +71,6 @@ if (BUILD_GUI)
     install(TARGETS sudokucode_gui RUNTIME DESTINATION bin)
 endif ()
 
-install(TARGETS sudokucode RUNTIME DESTINATION bin)
 if (BUILD_TESTS)
     install(TARGETS sudokucode_test RUNTIME DESTINATION bin)
 endif ()
