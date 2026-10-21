@@ -356,7 +356,6 @@ std::vector<uint8_t> encode(const std::vector<uint8_t>& data,
     out.grid = g;
     out.mask = fixed;
     out.length = static_cast<uint32_t>(k);
-    out.crc = c;
     return codeword;
 }
 
@@ -405,72 +404,6 @@ std::vector<uint8_t> decode(const Code& code, const Params& p) {
 
     if (p.encrypt) data = xorCrypt(data, p.key);
     return data;
-}
-
-// ============================================================================
-// SC1 file format
-// ============================================================================
-bool writeCodeFile(const std::string& path, const Code& c) {
-    std::ofstream ofs(path, std::ios::binary);
-    if (!ofs) return false;
-    auto h = [](uint8_t v) {
-        const char* hex = "0123456789ABCDEF";
-        std::string s; s += hex[(v >> 4) & 0xF]; s += hex[v & 0xF]; return s;
-    };
-    ofs << "SC1\n";
-    ofs << h(static_cast<uint8_t>(c.n)) << "\n";
-    ofs << h(static_cast<uint8_t>(c.length >> 8)) << h(static_cast<uint8_t>(c.length & 0xFF)) << "\n";
-    ofs << h(static_cast<uint8_t>(c.crc >> 24)) << h(static_cast<uint8_t>((c.crc >> 16) & 0xFF))
-        << h(static_cast<uint8_t>((c.crc >> 8) & 0xFF)) << h(static_cast<uint8_t>(c.crc & 0xFF)) << "\n";
-    int n = c.n;
-    for (int r = 0; r < n; ++r) {
-        for (int c2 = 0; c2 < n; ++c2) ofs << h(c.grid[r * n + c2]);
-        ofs << "\n";
-    }
-    for (int r = 0; r < n; ++r) {
-        for (int c2 = 0; c2 < n; ++c2) ofs << (c.mask[r * n + c2] ? "01" : "00");
-        ofs << "\n";
-    }
-    return ofs.good();
-}
-
-bool readCodeFile(const std::string& path, Code& c) {
-    std::ifstream ifs(path);
-    if (!ifs) return false;
-    std::string magic;
-    if (!(ifs >> magic) || magic != "SC1") return false;
-    auto readByte = [&](uint8_t& v) -> bool {
-        std::string tok;
-        if (!(ifs >> tok)) return false;
-        if (tok.size() != 2) return false;
-        unsigned long val;
-        try { val = std::stoul(tok, nullptr, 16); } catch (...) { return false; }
-        v = static_cast<uint8_t>(val);
-        return true;
-    };
-    uint8_t nv;
-    if (!readByte(nv)) return false;
-    c.n = nv;
-    int n = c.n;
-    c.grid.assign(n * n, 0);
-    c.mask.assign(n * n, 0);
-    uint8_t hi, lo;
-    if (!readByte(hi) || !readByte(lo)) return false;
-    c.length = (static_cast<uint32_t>(hi) << 8) | lo;
-    uint8_t b0,b1,b2,b3;
-    if (!readByte(b0)||!readByte(b1)||!readByte(b2)||!readByte(b3)) return false;
-    c.crc = ((uint32_t)b0<<24)|((uint32_t)b1<<16)|((uint32_t)b2<<8)|b3;
-    for (int i = 0; i < n * n; ++i) {
-        uint8_t v;
-        if (!readByte(v)) return false;
-        c.grid[i] = v;
-    }
-    for (int i = 0; i < n * n; ++i) {
-        std::string tok;
-        if (!(ifs >> tok)) return false;
-        c.mask[i] = (tok == "01");
-    }
-    return true;
 }
 
 // ============================================================================
@@ -570,7 +503,6 @@ bool readBMP(const std::string& path, Code& c, int cellSize) {
         }
     }
     c.length = static_cast<uint32_t>(n * n);
-    c.crc = 0;
     return true;
 }
 

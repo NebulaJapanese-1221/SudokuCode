@@ -5,20 +5,8 @@ Instead of digits 1-9, each cell holds a hexadecimal value from `00` to `FF`.
 
 ## Format
 
-A `.sudokucode` file (version `SC1`) contains:
-
-```
-SC1
-<n: 1 hex digit>
-<length: 4 hex digits (big-endian uint16)>
-<crc32: 8 hex digits (big-endian uint32)>
-<row 1: n*n hex values>
-...
-<row n: n*n hex values>
-<mask row 1: n*n values (01=data, 00=solved)>
-...
-<mask row n: n*n values>
-```
+A SudokuCode is stored as a BMP image. Each cell of the grid holds one
+hexadecimal byte value (`00`-`FF`) encoded as a grayscale cell in the image.
 
 - Grid dimensions: `4x4`, `9x9`, or `16x16` cells.
 - Each cell holds one byte `00`-`FF`.

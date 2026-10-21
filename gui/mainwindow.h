@@ -19,7 +19,6 @@ private slots:
     void onOpenDecodeInput();
     void onSaveDecodeOutput();
     void onExportImage();
-    void onImportDecodeImage();
     void onToggleEncrypt(bool checked);
     void onCellClicked(int row, int col);
     void onCopyAscii();
@@ -58,7 +57,6 @@ private:
     QLineEdit* m_decodeKeyEdit = nullptr;
     QComboBox* m_decodeGridSizeCombo = nullptr;
     QSpinBox* m_decodeEccSpin = nullptr;
-    QCheckBox* m_decodeImageBox = nullptr;
     QSpinBox* m_decodeCellSizeSpin = nullptr;
     QTextEdit* m_decodeAsciiEdit = nullptr;
     QPushButton* m_decodeBtnDecode = nullptr;

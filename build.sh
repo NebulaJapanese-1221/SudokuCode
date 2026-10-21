@@ -34,7 +34,7 @@ cmake --build "$BUILD_DIR" -j"$(nproc 2>/dev/null || echo 4)"
 if [[ "$BUILD_TESTS" == "ON" ]]; then
     ctest --test-dir "$BUILD_DIR" --output-on-failure
 fi
-
+cd build && make
 echo "Build complete."
 if [[ "$BUILD_GUI" == "ON" ]]; then
     echo "  GUI:     $BUILD_DIR/sudokucode_gui"

@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 project(SudokuCode LANGUAGES CXX)
 
+# Linux only
+if (NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    message(FATAL_ERROR "SudokuCode supports Linux only")
+endif()
+
 # Prefer clang on all platforms; fall back to system C++ compiler if absent.
 if (NOT DEFINED ENV{CXX} AND NOT DEFINED CMAKE_CXX_COMPILER)
     find_program(CLANG_CXX NAMES clang++ clang-c++ HINTS ENV PATH)

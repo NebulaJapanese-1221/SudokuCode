@@ -26,12 +26,6 @@ static void roundTrip(int n, int ecc, size_t payload, bool encrypt, uint32_t see
     assert(code.length == data.size() + 4); // + crc
     auto out = decode(code, p);
     assert(out == data);
-    // file round trip
-    writeCodeFile("/tmp/sc_test.sc1", code);
-    Code code2;
-    readCodeFile("/tmp/sc_test.sc1", code2);
-    auto out2 = decode(code2, p);
-    assert(out2 == data);
 }
 
 int main() {

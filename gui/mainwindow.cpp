@@ -67,7 +67,7 @@ void MainWindow::buildUI() {
     ++r;
 
     encGrid->addWidget(new QLabel("Output file:", this), r, 0);
-    m_outputEdit = new QLineEdit("output.sudokucode", this);
+    m_outputEdit = new QLineEdit("output.bmp", this);
     QPushButton* btnOut = new QPushButton("Browse...", this);
     QHBoxLayout* outRow = new QHBoxLayout;
     outRow->addWidget(m_outputEdit);
@@ -198,13 +198,6 @@ void MainWindow::buildUI() {
     decGrid->addWidget(m_decodeKeyEdit, r, 2, 1, 2);
     ++r;
 
-    m_decodeImageBox = new QCheckBox("Input is BMP image", this);
-    decGrid->addWidget(m_decodeImageBox, r, 0, 1, 2);
-    QPushButton* btnImg = new QPushButton("Import BMP...", this);
-    decGrid->addWidget(btnImg, r, 3);
-    connect(btnImg, &QPushButton::clicked, this, &MainWindow::onImportDecodeImage);
-    ++r;
-
     decGrid->addWidget(new QLabel("Image cell size (px):", this), r, 0);
     m_decodeCellSizeSpin = new QSpinBox(this);
     m_decodeCellSizeSpin->setRange(10, 200);
@@ -294,7 +287,7 @@ void MainWindow::onOpenEncodeInput() {
 }
 
 void MainWindow::onSaveEncodeOutput() {
-    QString f = QFileDialog::getSaveFileName(this, "Save output file", QString(), "All files (*.*)");
+    QString f = QFileDialog::getSaveFileName(this, "Save output file", QString(), "BMP Image (*.bmp)");
     if (!f.isEmpty() && m_outputEdit) m_outputEdit->setText(f);
 }
 
@@ -334,9 +327,9 @@ void MainWindow::onEncode() {
     }
 
     QString outPath = m_outputEdit->text();
-    if (outPath.isEmpty()) outPath = "output.sudokucode";
-    if (!writeCodeFile(outPath.toStdString(), code)) {
-        QMessageBox::critical(this, "SudokuCode", "Failed to write output file.");
+    if (outPath.isEmpty()) outPath = "output.bmp";
+    if (!writeBMP(outPath.toStdString(), code, m_cellSizeSpin->value())) {
+        QMessageBox::critical(this, "SudokuCode", "Failed to write output image.");
         return;
     }
 
@@ -354,16 +347,9 @@ void MainWindow::onDecode() {
 
     Code code;
     try {
-        if (m_decodeImageBox->isChecked()) {
-            if (!readBMP(m_decodeInputEdit->text().toStdString(), code, m_decodeCellSizeSpin->value())) {
-                QMessageBox::critical(this, "SudokuCode", "Failed to read BMP image.");
-                return;
-            }
-        } else {
-            if (!readCodeFile(m_decodeInputEdit->text().toStdString(), code)) {
-                QMessageBox::critical(this, "SudokuCode", "Failed to read SudokuCode file.");
-                return;
-            }
+        if (!readBMP(m_decodeInputEdit->text().toStdString(), code, m_decodeCellSizeSpin->value())) {
+            QMessageBox::critical(this, "SudokuCode", "Failed to read BMP image.");
+            return;
         }
     } catch (const std::exception& e) {
         QMessageBox::critical(this, "SudokuCode", QString("Read failed: %1").arg(e.what()));
@@ -404,21 +390,6 @@ void MainWindow::onExportImage() {
         return;
     }
     updateStatus(QString("Exported image -> %1").arg(f));
-}
-
-void MainWindow::onImportDecodeImage() {
-    QString f = QFileDialog::getOpenFileName(this, "Import BMP image", QString(),
-        "BMP Image (*.bmp)");
-    if (f.isEmpty()) return;
-    Code code;
-    if (!readBMP(f.toStdString(), code, m_decodeCellSizeSpin->value())) {
-        QMessageBox::critical(this, "SudokuCode", "Failed to read BMP image.");
-        return;
-    }
-    m_decodeInputEdit->setText(f);
-    m_decodeImageBox->setChecked(true);
-    populateCode(code);
-    updateStatus(QString("Imported image -> %1").arg(f));
 }
 
 void MainWindow::onCellClicked(int row, int col) {

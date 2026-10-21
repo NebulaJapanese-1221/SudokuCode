@@ -18,18 +18,13 @@ struct Code {
     int n = 9;
     std::vector<uint8_t> grid;   // n*n solved values
     std::vector<uint8_t> mask;   // n*n: 1 = original data cell, 0 = solved filler
-    uint32_t length = 0;         // number of data bytes
-    uint32_t crc = 0;            // CRC32 of payload
+    uint32_t length = 0;         // number of data bytes (incl. CRC)
 };
 
 // ---------- encode / decode ----------
 std::vector<uint8_t> encode(const std::vector<uint8_t>& data,
                             const Params& p, Code& out);
 std::vector<uint8_t> decode(const Code& code, const Params& p);
-
-// ---------- file format (SC1) ----------
-bool writeCodeFile(const std::string& path, const Code& c);
-bool readCodeFile(const std::string& path, Code& c);
 
 // ---------- BMP image (no external deps) ----------
 bool writeBMP(const std::string& path, const Code& c, int cellSize = 20);
