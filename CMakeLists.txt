@@ -67,13 +67,27 @@ if (BUILD_GUI)
     target_include_directories(sudokucode_gui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
                                                        ${CMAKE_CURRENT_SOURCE_DIR}/src
                                                        ${CMAKE_CURRENT_SOURCE_DIR}/gui)
-    target_link_libraries(sudokucode_gui PRIVATE ${QT_WIDGETS} ${QT_GUI})
+    target_link_libraries(sudokucode_gui PRIVATE ${QT_WIDGETS} ${QT_GUI} z crypto)
 
     if (QT_VERSION_MAJOR EQUAL 6)
         set_target_properties(sudokucode_gui PROPERTIES CXX_STANDARD 17)
     endif()
 
     install(TARGETS sudokucode_gui RUNTIME DESTINATION bin)
+endif()
+
+# ---------- Python extension (optional) ----------
+option(BUILD_PYTHON "Build Python bindings" OFF)
+if (BUILD_PYTHON)
+    find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+    add_library(sudokucode MODULE
+        src/sudokucode.cpp
+        pybind/sudokucode_module.cpp
+    )
+    target_include_directories(sudokucode PRIVATE ${Python3_INCLUDE_DIRS})
+    target_link_libraries(sudokucode PRIVATE z crypto Python3::Python)
+    set_target_properties(sudokucode PROPERTIES PREFIX "" SUFFIX ".so")
+    install(TARGETS sudokucode LIBRARY DESTINATION lib/python3/site-packages)
 endif ()
 
 if (BUILD_TESTS)

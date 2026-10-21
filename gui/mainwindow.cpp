@@ -91,6 +91,10 @@ void MainWindow::buildUI() {
     encGrid->addWidget(m_eccSpin, r, 1);
     ++r;
 
+    m_autoEccBox = new QCheckBox("Auto ECC", this);
+    encGrid->addWidget(m_autoEccBox, r, 0, 1, 2);
+    ++r;
+
     m_encryptBox = new QCheckBox("Encrypt (XOR)", this);
     encGrid->addWidget(m_encryptBox, r, 0, 1, 2);
     connect(m_encryptBox, &QCheckBox::toggled, this, &MainWindow::onToggleEncrypt);
@@ -100,7 +104,13 @@ void MainWindow::buildUI() {
     encGrid->addWidget(m_keyEdit, r, 2, 1, 2);
     ++r;
 
-    m_compressBox = new QCheckBox("Compress (reserved)", this);
+    m_passEdit = new QLineEdit(this);
+    m_passEdit->setPlaceholderText("Passphrase (PBKDF2)");
+    encGrid->addWidget(new QLabel("Passphrase:", this), r, 0);
+    encGrid->addWidget(m_passEdit, r, 1, 1, 3);
+    ++r;
+
+    m_compressBox = new QCheckBox("Compress (zlib)", this);
     encGrid->addWidget(m_compressBox, r, 0, 1, 2);
     ++r;
 
@@ -192,11 +202,25 @@ void MainWindow::buildUI() {
     decGrid->addWidget(m_decodeEccSpin, r, 1);
     ++r;
 
+    m_decodeAutoEccBox = new QCheckBox("Auto ECC", this);
+    decGrid->addWidget(m_decodeAutoEccBox, r, 0, 1, 2);
+    ++r;
+
     m_decodeEncryptBox = new QCheckBox("Decrypt (XOR)", this);
     decGrid->addWidget(m_decodeEncryptBox, r, 0, 1, 2);
     m_decodeKeyEdit = new QLineEdit(this);
     m_decodeKeyEdit->setPlaceholderText("XOR key");
     decGrid->addWidget(m_decodeKeyEdit, r, 2, 1, 2);
+    ++r;
+
+    m_decodePassEdit = new QLineEdit(this);
+    m_decodePassEdit->setPlaceholderText("Passphrase (PBKDF2)");
+    decGrid->addWidget(new QLabel("Passphrase:", this), r, 0);
+    decGrid->addWidget(m_decodePassEdit, r, 1, 1, 3);
+    ++r;
+
+    m_decodeCompressBox = new QCheckBox("Decompress (zlib)", this);
+    decGrid->addWidget(m_decodeCompressBox, r, 0, 1, 2);
     ++r;
 
     decGrid->addWidget(new QLabel("Image cell size (px):", this), r, 0);
@@ -252,8 +276,10 @@ sc::Params MainWindow::encodeParams() const {
     Params p;
     p.n = m_gridSizeCombo->currentText().toInt();
     p.eccLevel = m_eccSpin->value();
+    p.autoEcc = m_autoEccBox->isChecked();
     p.encrypt = m_encryptBox->isChecked();
     p.key = m_keyEdit->text().toStdString();
+    p.passphrase = m_passEdit->text().toStdString();
     p.compress = m_compressBox->isChecked();
     return p;
 }
@@ -262,8 +288,11 @@ sc::Params MainWindow::decodeParams() const {
     Params p;
     p.n = m_decodeGridSizeCombo->currentText().toInt();
     p.eccLevel = m_decodeEccSpin->value();
+    p.autoEcc = m_decodeAutoEccBox->isChecked();
     p.encrypt = m_decodeEncryptBox->isChecked();
     p.key = m_decodeKeyEdit->text().toStdString();
+    p.passphrase = m_decodePassEdit->text().toStdString();
+    p.compress = m_decodeCompressBox->isChecked();
     return p;
 }
 
@@ -319,9 +348,9 @@ void MainWindow::onEncode() {
                                     std::istreambuf_iterator<char>());
     }
 
-    Code code;
+    std::vector<Code> pages;
     try {
-        encode(data, p, code);
+        pages = encode(data, p);
     } catch (const std::exception& e) {
         QMessageBox::critical(this, "SudokuCode", QString("Encode failed: %1").arg(e.what()));
         return;
@@ -329,14 +358,14 @@ void MainWindow::onEncode() {
 
     QString outPath = m_outputEdit->text();
     if (outPath.isEmpty()) outPath = "output.bmp";
-    if (!writeBMP(outPath.toStdString(), code, m_cellSizeSpin->value())) {
+    if (!writeBMP(outPath.toStdString(), pages, m_cellSizeSpin->value())) {
         QMessageBox::critical(this, "SudokuCode", "Failed to write output image.");
         return;
     }
 
-    populateCode(code);
-    updateStatus(QString("Encoded %1 bytes -> %2 (grid %3x%3, ecc=%4)")
-                 .arg(data.size()).arg(outPath).arg(p.n).arg(p.eccLevel));
+    populateCode(pages.front());
+    updateStatus(QString("Encoded %1 bytes -> %2 (%3 pages, grid %4x%4, ecc=%5)")
+                 .arg(data.size()).arg(outPath).arg(pages.size()).arg(p.n).arg(p.eccLevel));
 }
 
 void MainWindow::onDecode() {
@@ -346,9 +375,9 @@ void MainWindow::onDecode() {
     }
     Params p = decodeParams();
 
-    Code code;
+    std::vector<Code> pages;
     try {
-        if (!readBMP(m_decodeInputEdit->text().toStdString(), code, m_decodeCellSizeSpin->value())) {
+        if (!readBMP(m_decodeInputEdit->text().toStdString(), pages, m_decodeCellSizeSpin->value())) {
             QMessageBox::critical(this, "SudokuCode", "Failed to read BMP image.");
             return;
         }
@@ -359,13 +388,13 @@ void MainWindow::onDecode() {
 
     std::vector<uint8_t> data;
     try {
-        data = decode(code, p);
+        data = decode(pages, p);
     } catch (const std::exception& e) {
         QMessageBox::critical(this, "SudokuCode", QString("Decode failed: %1").arg(e.what()));
         return;
     }
 
-    populateCode(code);
+    populateCode(pages.front());
     QString outPath = m_decodeOutputEdit->text();
     if (!outPath.isEmpty()) {
         std::ofstream ofs(outPath.toStdString(), std::ios::binary);
@@ -379,14 +408,15 @@ void MainWindow::onDecode() {
 
 void MainWindow::onExportImage() {
     Code code = m_gridWidget->code();
-    if (code.n <= 0) {
+    if (code.n <= 0 || code.grid.empty()) {
         QMessageBox::warning(this, "SudokuCode", "No grid to export. Generate first.");
         return;
     }
     QString f = QFileDialog::getSaveFileName(this, "Export BMP image", "code.bmp",
         "BMP Image (*.bmp)");
     if (f.isEmpty()) return;
-    if (!writeBMP(f.toStdString(), code, m_cellSizeSpin->value())) {
+    std::vector<Code> pages{code};
+    if (!writeBMP(f.toStdString(), pages, m_cellSizeSpin->value())) {
         QMessageBox::critical(this, "SudokuCode", "Failed to export BMP image.");
         return;
     }

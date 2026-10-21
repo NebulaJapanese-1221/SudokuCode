@@ -53,9 +53,11 @@ private:
     QComboBox* m_gridSizeCombo = nullptr;
     QSpinBox* m_eccSpin = nullptr;
     QSpinBox* m_cellSizeSpin = nullptr;
+    QCheckBox* m_autoEccBox = nullptr;
     QPushButton* m_btnEncode = nullptr;
     QPushButton* m_btnExportImage = nullptr;
     QPushButton* m_btnCopyAscii = nullptr;
+    QLineEdit* m_passEdit = nullptr;
 
     GridWidget* m_gridWidget = nullptr;
     QTextEdit* m_asciiEdit = nullptr;
@@ -65,8 +67,11 @@ private:
     QLineEdit* m_decodeOutputEdit = nullptr;
     QCheckBox* m_decodeEncryptBox = nullptr;
     QLineEdit* m_decodeKeyEdit = nullptr;
+    QLineEdit* m_decodePassEdit = nullptr;
     QComboBox* m_decodeGridSizeCombo = nullptr;
     QSpinBox* m_decodeEccSpin = nullptr;
+    QCheckBox* m_decodeAutoEccBox = nullptr;
+    QCheckBox* m_decodeCompressBox = nullptr;
     QSpinBox* m_decodeCellSizeSpin = nullptr;
     QTextEdit* m_decodeAsciiEdit = nullptr;
     QPushButton* m_decodeBtnDecode = nullptr;

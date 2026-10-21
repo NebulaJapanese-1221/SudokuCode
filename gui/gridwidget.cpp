@@ -82,7 +82,7 @@ void GridWidget::paintEvent(QPaintEvent* event) {
     p.setRenderHint(QPainter::Antialiasing, true);
 
     int n = m_code.n;
-    if (n <= 0) {
+    if (n <= 0 || m_code.grid.empty()) {
         p.fillRect(rect(), palette().window());
         p.setPen(m_textColor);
         p.drawText(rect(), Qt::AlignCenter, "No grid loaded");
