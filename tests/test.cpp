@@ -53,7 +53,6 @@ int main() {
         assert(out == v);
         ++passed;
     }
-    // full 81 bytes grid (may fail sudoku constraints - skip if conflicts)
     // random round trips
     for (int ecc = 0; ecc <= 3; ++ecc)
         for (int n : {4, 9, 16})
@@ -71,7 +70,7 @@ int main() {
                                       << " (" << e.what() << ")\n";
                         }
                     }
-    // corrupt byte -> decode should fail
+    // corrupt byte -> decode should fail/correct
     {
         Params p; p.n = 9; p.eccLevel = 2; // 8 parity can fix up to 4 errors; 1 error ok
         auto data = randBytes(10, 42);

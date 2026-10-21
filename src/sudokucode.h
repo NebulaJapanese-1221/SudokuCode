@@ -41,4 +41,7 @@ std::string asciiPreview(const Code& c);
 // ---------- CRC32 ----------
 uint32_t crc32(const uint8_t* data, size_t len);
 
+// ---------- Validation ----------
+bool validateGrid(const Code& c);
+
 } // namespace sc
