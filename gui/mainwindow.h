@@ -2,6 +2,16 @@
 
 #include <QMainWindow>
 #include <QWidget>
+#include <QTabWidget>
+#include <QLineEdit>
+#include <QCheckBox>
+#include <QComboBox>
+#include <QSpinBox>
+#include <QPushButton>
+#include <QTextEdit>
+#include <QLabel>
+
+#include "src/sudokucode.h"
 
 class GridWidget;
 

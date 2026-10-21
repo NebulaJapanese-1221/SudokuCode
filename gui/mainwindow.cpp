@@ -2,6 +2,7 @@
 #include "gridwidget.h"
 
 #include <QApplication>
+#include <QClipboard>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
